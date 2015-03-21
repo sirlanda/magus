@@ -2,7 +2,8 @@ import KarakterGenerator
 
 def domi = new KarakterGenerator()
 
-domi.elf().varazslo()
+// domi.kepessegek.ero = 16
+domi.varazslo().elf()
 
 //def ep = karakter.kaszt.ep + kara
 println domi.dump()

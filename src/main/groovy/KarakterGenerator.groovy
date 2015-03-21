@@ -5,6 +5,24 @@
  */
 class KarakterGenerator {
 
+    /*
+     * Muveleti sorrend:
+     *  - alapkepessegek meghatarozasa
+     *  - alapkepzettsegek
+     *  - faji bonuszok es kepzettsegek
+     *  - harci alapertekek
+     *  - pszi
+     *  - mana
+     *  - szintlepesek
+     *  - kepessegpontok
+     *  - felszereles
+     *  - harci konfiguraciok
+     *  - zseton
+     */
+
+    def rand = new Random()
+
+    // ATTRIBUTES
     def kepessegek = [ero          : 0, allokepesseg: 0,
                       gyorsasag    : 0, ugyesseg: 0,
                       egesszeg     : 0, szepseg: 0,
@@ -21,16 +39,18 @@ class KarakterGenerator {
     String faj = null
     String kaszt = null
 
-    int ep = 0
-    int fp = 0
-    String fpPerSzint = null
+    def harciErtekek = [alapEp: 0, ep: 0,
+                        alapFp: 0, fp: 0, fpPerSzint: '',
+                        alapKE: 0, alapTE: 0, alapVE: 0, alapCE: 0,
+                        hmPerSzint: 0, hmTEVEKotelezo: 0]
 
-    int alapKE = 0
-    int alapTE = 0
-    int alapVE = 0
-    int alapCE = 0
+    int alapKP = 0
+    int kpPerSzint = 0
 
-    def rand = new Random()
+    int alapPszi = 0
+    int tmeAsztral = 0
+
+    // METHODS
 
     def int kocka(int oldal) {
         rand.nextInt(oldal) + 1
@@ -82,7 +102,7 @@ class KarakterGenerator {
         kepzettsegek += 'Idomítás (Mf)'
         kepzettsegek += 'Erdőjárás (Mf)'
 
-        alapCE = 20
+        harciErtekek.alapCE = 20
 
         this
     }
@@ -100,7 +120,7 @@ class KarakterGenerator {
         kepzettsegek += 'Lovaglás (Mf)'
         kepzettsegek += 'Idomítás (Mf)'
 
-        alapCE = 10
+        harciErtekek.alapCE = 10
 
         this
     }
@@ -123,8 +143,6 @@ class KarakterGenerator {
         kepzettsegek += 'Csapdafelfedezés: 35%'
         kepzettsegek += 'Titkosajtó keresés: 30%'
 
-        alapCE = 20
-
         this
     }
 
@@ -145,32 +163,109 @@ class KarakterGenerator {
         kepzettsegek += 'Csapdafelfedezés: 20%'
         kepzettsegek += 'Titkosajtó keresés: 10%'
 
-        alapCE = 20
-
         this
     }
 
     def KarakterGenerator harcos() {
         kaszt = 'harcos'
-        ep = 7
-        fp = 6
-        fpPerSzint = "k6()+4"
+        harciErtekek.alapEp = 7
+        harciErtekek.alapFp = 6
+        harciErtekek.fpPerSzint = "k6()+4"
 
-        kepessegek.ero += k6() + 12
-        kepessegek.ero = kf(kepessegek.ero)
-    }
-
-    def KarakterGenerator varazslo() {
-        kaszt = 'varázsló'
-        ep = 3
-        fp = 2
-        fpPerSzint = "k6()"
+        if (kepessegek.ero == 0) {
+            kepessegek.ero += k6() + 12
+            kepessegek.ero = kf(kepessegek.ero)
+            kepessegek.gyorsasag += k6() + k6() + 6
+            kepessegek.gyorsasag = kf(kepessegek.gyorsasag)
+        }
 
         this
     }
 
+    def KarakterGenerator varazslo() {
+        kaszt = 'varázsló'
+        harciErtekek.alapEp = 3
+        harciErtekek.alapFp = 2
+        harciErtekek.fpPerSzint = "k6()"
+
+        harciErtekek.alapKE = 2
+        harciErtekek.alapTE = 15
+        harciErtekek.alapVE = 70
+        harciErtekek.alapCE = 0
+
+        harciErtekek.hmPerSzint = 4
+        harciErtekek.hmTEVEKotelezo = 1
+
+        alapKP = 7
+        kpPerSzint = 7
+
+        // kepessegek
+        if (kepessegek.ero == 0) {
+            kepessegek.ero += k6x3()
+            kepessegek.allokepesseg += k6x3()
+            kepessegek.gyorsasag += k6x3_2x()
+            kepessegek.ugyesseg += k6x3_2x()
+            kepessegek.egesszeg += k6x3_2x()
+            kepessegek.szepseg += k6x3()
+            kepessegek.intelligencia += k6() + 12
+            kepessegek.intelligencia = kf(kepessegek.intelligencia)
+            kepessegek.akaratero += k6() + 12
+            kepessegek.akaratero = kf(kepessegek.akaratero)
+            kepessegek.asztral += k6() + 12
+            kepessegek.asztral = kf(kepessegek.asztral)
+        }
+
+        // bonuszok
+        bonuszok()
+
+        this
+    }
+
+    def bonuszok() {
+        harciErtekek.fp = harciErtekek.alapFp + tizFolottiBonusz(kepessegek.allokepesseg) + tizFolottiBonusz(kepessegek.akaratero)
+        harciErtekek.ep = harciErtekek.alapEp + tizFolottiBonusz(kepessegek.egesszeg)
+        alapPszi = tizFolottiBonusz(kepessegek.intelligencia)
+        tmeAsztral = tizFolottiBonusz(kepessegek.asztral)
+    }
+
+    def int keBonusz() {
+        tizFolottiBonusz(kepessegek.gyorsasag)
+    }
+
+    def int teBonusz() {
+        tizFolottiBonusz(kepessegek.ero) + tizFolottiBonusz(kepessegek.gyorsasag) + tizFolottiBonusz(kepessegek.ugyesseg)
+    }
+
+    def int veBonusz() {
+        tizFolottiBonusz(kepessegek.gyorsasag) + tizFolottiBonusz(kepessegek.ugyesseg)
+    }
+
+    def int ceBonusz() {
+        tizFolottiBonusz(kepessegek.ugyesseg)
+    }
+
+    def int alapKPInt() {
+        tizFolottiBonusz(kepessegek.intelligencia)
+    }
+
+    def int alapKPUgy() {
+        tizFolottiBonusz(kepessegek.ugyesseg)
+    }
+
+    def int tizFolottiBonusz(int kepesseg) {
+        Math.max(kepesseg - 10, 0)
+    }
+
+    def int k6x3_2x() {
+        Math.max(k6x3(), k6x3())
+    }
+
+    def int k6x3() {
+        k6() + k6() + k6()
+    }
+
     def KarakterGenerator szintlepes() {
-        fp += Eval.x(this, "x." + fpPerSzint)
+        harciErtekek.fp += Eval.x(this, "x." + harciErtekek.fpPerSzint)
 
         this
     }
