@@ -1,0 +1,6 @@
+/doc
+/out
+/build
+.git
+.gradle
+.idea

@@ -1,0 +1,13 @@
+harcos = {
+	ep: 7,
+	fp: 6,
+	fpPerSzint: "k6+4"
+}
+
+varazslo = {
+	ep: 3,
+	fp: 2,
+	fpPerSzint: "k6"
+}
+
+
